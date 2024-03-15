@@ -1,5 +1,4 @@
-ANA Elena-Diana, 331 CB
-README - TEMA 1 RL
+# TEMA 1 RL - Basic Switch Implementation
 
 In aceasta tema am realizat implementarea unui switch cu toate cele 3 functionalitati
 prezentate in enunt: forwarding with learning, VLAN support si STP support.
