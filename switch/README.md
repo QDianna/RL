@@ -1,44 +1,37 @@
-# TEMA 1 RL - Basic Switch Implementation
+# Tema 1 RL – Basic Switch Implementation
 
-In aceasta tema am realizat implementarea unui switch cu toate cele 3 functionalitati
-prezentate in enunt: forwarding with learning, VLAN support si STP support.
-Pe langa functiile existente in schelet, am creat urmatoarele functii:
-- create_BDPU: functie folosita pentru a crea un frame de tip BDPU, urmand structura
-din enunt
-- parse_BDPU: primeste un cadru BDPU si extrage datele din el
-- read_config_file: citeste fisierul de config al switch-ului, returneaza prioritatea
-si creeaza si returneaza un dictionar in care cheia este numele interfetei si
-valoarea este tipul acesteia ('T' pt trunk si <VLAN_ID> pentru access)
-- is_unicast
-- foward_frame
+Proiect realizat pentru cursul **Rețele Locale (RL)**.  
+Implementarea constă într-un switch software care suportă:  
+- **Forwarding with learning**  
+- **VLAN support**  
+- **Spanning Tree Protocol (STP)**  
 
-In functia main am inceput prin a initializa dictionarele pe care le-am utilizat:
-- config_data - interfete & tipul lor (trunk sau access)
-- trunk_state - interfete trunk & starea lor ("BLOCKED" sau "LISTENING"), pentru STP
-- CAM_table - adrese MAC & interfetele asociate
-Am pornit un thread care are ca thread function "send_bdpu_every_sec", care se ocupa
-cu trimiterea de pachete BDPU in cazul in care switch-ul este root bridge in LAN
+## Funcționalități implementate
 
-In continuare, intr-un loop infinit, se primesc cadre ("recv_from_any_link"), se
-determina tipul lor si se iau actiuni corespunzatoare:
+Pe lângă funcțiile din schelet, am adăugat:  
+- `create_BDPU`: creează un frame BDPU conform structurii din enunț  
+- `parse_BDPU`: primește un BDPU și extrage datele din el  
+- `read_config_file`: citește fișierul de configurare al switch-ului, returnează prioritatea și creează un dicționar cu interfețe și tipurile lor (`T` pentru trunk, `<VLAN_ID>` pentru access)  
+- `is_unicast`: verifică dacă adresa MAC este unicast  
+- `forward_frame`: tratează logica de forward în funcție de CAM table și VLAN  
 
-1. pachete BDPU - rulez STP conform cu pseudocodul din enunt
-- deosebite prin adresa mac destinatie = 00:80:C2:00:00:00
-Pornesc cu fiecare switch configurat ca RB; la primirea unui pachet determin daca
-am "aflat" un RB mai prioritar:
-- daca da - actualizez datele switch-ului; daca switch-ul era RB ii blochez porturile,
-mai putin "root_port", apoi transmit mai departe pachetul adaugand costul de a trece
-prin switch-ul curent;
-- daca nu - daca am primit pe root_port un RB la fel de prioritar ca RB curent,
-compar costul de a trece prin switch-ul de la care am primit cu costul pe care
-il aveam initial si actualizez daca e cazul;
-          - daca portul pe care am primit nu e root_port, verific daca switch-ul
-care a trimis are un cost mai mare decat costul pe care l-ar avea prin switch-ul
-curent si daca da, pun portul sw curent in listening
+## Structuri de date
+- `config_data`: dicționar cu interfețe și tipurile lor (trunk sau access)  
+- `trunk_state`: dicționar cu interfețele trunk și starea lor (BLOCKED / LISTENING) pentru STP  
+- `CAM_table`: dicționar cu adrese MAC și interfețele asociate  
 
-2. alte pachete - fac forwarding & learning avand in vedere VLAN urile din topologie
-daca am destinatia in tabela CAM:
-- daca am primit de pe port access (fara tag) trimit pe trunk cu tag si pe acces fara tag
-- daca am primit de pe port trunk (cu tag) trimit pe trunk la fel si pe access scot tag-ul
-daca destinatia nu e in tabela CAM / destinatia e adr de broadcast:
-- pentru toate interfetele disponibile (listening) am aceleasi 2 cazuri de mai sus
+## Spanning Tree Protocol (STP)
+- Inițial, fiecare switch pornește ca **root bridge**.  
+- Pachetele BDPU sunt deosebite prin adresa MAC de destinație `00:80:C2:00:00:00`.  
+- La recepția unui BDPU, se actualizează RB și porturile în funcție de prioritate și costuri.  
+- Thread-ul `send_bdpu_every_sec` se ocupă cu trimiterea periodică de BDPU-uri atunci când switch-ul este root bridge.  
+
+## Forwarding & Learning
+- Dacă destinația există în CAM table:  
+  - Cadru primit pe port access (fără tag): trimis pe trunk cu tag și pe access fără tag.  
+  - Cadru primit pe port trunk (cu tag): trimis mai departe pe trunk cu tag și pe access fără tag.  
+- Dacă destinația nu este în CAM table sau este broadcast:  
+  - Se face flood pe toate porturile în **stare LISTENING**, respectând regulile VLAN.  
+
+## Concluzie
+Proiectul demonstrează implementarea unui switch software simplificat cu suport pentru **learning, VLAN și STP**, folosind concepte de rețelistică practică și algoritmi de rutare a cadrelor Ethernet.
